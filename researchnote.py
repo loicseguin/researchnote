@@ -17,7 +17,7 @@ import unidecode
 __version__ = '0.1'
 
 
-NOTE_FILE_RE = r'\d{4,4}-\d{2,2}-\d{2,2}_[\w\-\+]*\.rst'
+NOTE_FILE_RE = r'\d{4,4}-\d{2,2}-\d{2,2}_[\w\-\+]*\.'
 
 
 def _(astring):
@@ -25,7 +25,7 @@ def _(astring):
     return astring
 
 
-def create_note(args):
+def create_note(args, config):
     """Create a new note.
 
     This creates a new file named ``YYYY-MM-DD_A_note_title.rst`` with the
@@ -34,7 +34,7 @@ def create_note(args):
         A note name
         ===========
 
-        :date: YYYY-MM-DD
+        :date: YYYY/MM/DD
         :author: Author Name
         :tags: 
 
@@ -44,51 +44,53 @@ def create_note(args):
     """
     title = unicode(' '.join(args.title), 'utf-8')
     date = time.strftime('%Y/%m/%d', time.localtime())
-    author, editor, notes_dir = read_config(args.config)
+    notes_dir = config['notes_dir']
+    note_format = config['note_format']
     file_title = unidecode.unidecode(
             title).replace(',', '').replace('.', '').replace(' ', '_')
-    file_title = os.path.join(notes_dir, date + '_' + file_title)
+    file_title = os.path.join(notes_dir, date.replace('/', '-') + '_' + file_title)
     i = 0
     while True:
         try:
             if i:
-                open(file_title + '_' + str(i) + '.rst')
+                open('{}_{}.{}'.format(file_title, str(i), note_format))
             else:
-                open(file_title + '.rst')
+                open('{}.{}'.format(file_title, note_format))
             i += 1
         except IOError:
             if i:
-                file_title += '_' + str(i) + '.rst'
+                file_title += '_{}.{}'.format(str(i), note_format)
             else:
-                file_title += '.rst'
+                file_title += '.{}'.format(note_format)
             note_file = open(file_title, 'w')
             break
 
     note_file.write(title.encode('utf-8'))
     note_file.write('\n' + len(title) * '=' + '\n\n')
-    note_file.write(':date: {}\n:author: {}\n:tags: '.format(date, author))
+    note_file.write(':date: {}\n:author: {}\n:tags: '.format(date,
+                    config['author']))
     note_file.close()
-    if editor:
-        subprocess.call(editor.split() + [file_title])
+    if config['editor']:
+        subprocess.call(config['editor'].split() + [file_title])
     else:
         print('Created file {}'.format(file_title))
 
 
-def edit_note(args):
+def edit_note(args, config):
     """Edit the note referred to by ``args.identifier``.
     
     The identifier can either be a note title, a date, a filename or a note
     number.
 
     """
-    author, editor, notes_dir = read_config(args.config)
     identifier = ' '.join(args.identifier)
     fname = ''
+    notes_dir = config['notes_dir']
     try:
         numid = int(identifier)
         fname, numid = get_note_list(notes_dir)[numid - 1]
     except ValueError:
-        fnames_numids = get_note_list(notes_dir)
+        fnames_numids = get_note_list(notes_dir, config['note_format'])
         notes = [(fname,) + read_note_info(open(fname)) for
                  fname, numid in fnames_numids]
         for fname, date, title in notes:
@@ -100,8 +102,8 @@ def edit_note(args):
                 file=sys.stderr)
         return
 
-    if editor:
-        subprocess.call(editor.split() + [fname])
+    if config['editor']:
+        subprocess.call(config['editor'].split() + [fname])
     else:
         print("EDITOR not defined, can't open file for editing.",
               file=sys.stderr)
@@ -119,21 +121,20 @@ def read_note_info(note_file):
     return date, title
 
 
-def get_note_list(notes_dir):
+def get_note_list(notes_dir, note_format):
     """Open notes_dir and find all notes. Return a list of notes paths."""
     listdir = os.listdir(notes_dir)
     notes = []
     for fname in listdir:
-        if re.compile(NOTE_FILE_RE).match(fname):
+        if re.compile(NOTE_FILE_RE + note_format).match(fname):
             notes.append(os.path.join(notes_dir, fname))
     notes = sorted(notes)
     return zip(notes, range(1, len(notes) + 1))
 
 
-def list_notes(args):
+def list_notes(args, config):
     """List all notes in chronological order."""
-    author, editor, notes_dir = read_config(args.config)
-    notes = get_note_list(notes_dir)
+    notes = get_note_list(config['notes_dir'], config['note_format'])
     notes = [read_note_info(open(fname)) + (numid,) for fname, numid in notes]
     if args.reverse:
         notes.reverse()
@@ -149,23 +150,23 @@ def read_config(fname='~/.researchnoterc'):
     location of the notebook and the editor used to create and edit notes.
 
     """
-    author = ''
-    editor = os.environ.get('EDITOR', '')
-    notes_dir = os.getcwd()
+    configs = {
+            'author': '',
+            'editor': os.environ.get('EDITOR', ''),
+            'notes_dir': os.getcwd(),
+            'note_format': 'rst'
+            }
     try:
-        config = ConfigParser.ConfigParser({'author': author, 'editor': editor,
-            'notes_dir': notes_dir})
+        config = ConfigParser.ConfigParser(configs)
         config.read(os.path.expanduser(fname))
-        author = config.get('ResearchNote', 'author')
-        editor = config.get('ResearchNote', 'editor')
-        notes_dir = os.path.expanduser(config.get('ResearchNote', 'notes_dir'))
-    except IOError:
-        # Could not open configuration file
-        pass
+        configs['author'] = config.get('ResearchNote', 'author')
+        configs['editor'] = config.get('ResearchNote', 'editor')
+        configs['notes_dir'] = os.path.expanduser(config.get('ResearchNote', 'notes_dir'))
+        configs['note_format'] = config.get('ResearchNote', 'note_format')
     except ConfigParser.NoSectionError:
         # Configuration file is badly formatted
         pass
-    return author, editor, notes_dir
+    return configs
 
 
 def run(argv=sys.argv[1:]):
@@ -194,7 +195,7 @@ def run(argv=sys.argv[1:]):
     listparser.set_defaults(func=list_notes)
 
     args = clparser.parse_args(argv)
-    args.func(args)
+    args.func(args, read_config(args.config))
 
 
 if __name__ == '__main__':
