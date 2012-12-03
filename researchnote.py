@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+"""
+File: researchnote.py
+Author: Loïc Séguin-Charbonneau
+Description: Manage a research notebook using reStructuredText files.
+
+License: BSD license
+
+"""
 
 from __future__  import print_function
 
@@ -8,6 +16,7 @@ import argparse
 import ConfigParser
 import re
 import os
+import string
 import subprocess
 import sys
 import time
@@ -36,7 +45,7 @@ def create_note(args, config):
 
         :date: YYYY/MM/DD
         :author: Author Name
-        :tags: 
+        :tags:
 
     Once the file is created, the user's preferred text editor is launched to
     edit the file.
@@ -46,9 +55,27 @@ def create_note(args, config):
     date = time.strftime('%Y/%m/%d', time.localtime())
     notes_dir = config['notes_dir']
     note_format = config['note_format']
-    file_title = unidecode.unidecode(
-            title).replace(',', '').replace('.', '').replace(' ', '_')
-    file_title = os.path.join(notes_dir, date.replace('/', '-') + '_' + file_title)
+    file_title = get_new_note_filename(title, date, notes_dir, note_format)
+    note_file = open(file_title, 'w')
+    note_file.write(title.encode('utf-8'))
+    note_file.write('\n' + len(title) * '=' + '\n\n')
+    note_file.write(':date: {}\n:author: {}\n:tags: '.format(date,
+                    config['author']))
+    note_file.close()
+    if config['editor']:
+        subprocess.call(config['editor'].split() + [file_title])
+    else:
+        print('Created file {}'.format(file_title))
+
+
+def get_new_note_filename(title, date, notes_dir, note_format):
+    """Return a file name for a new note with specified title and date."""
+    file_title = unidecode.unidecode(title)
+    file_title = file_title.translate(string.maketrans('', ''),
+            string.punctuation)
+    file_title = file_title.replace(' ', '_')
+    file_title = os.path.join(notes_dir,
+            date.replace('/', '-') + '_' + file_title)
     i = 0
     while True:
         try:
@@ -62,23 +89,14 @@ def create_note(args, config):
                 file_title += '_{}.{}'.format(str(i), note_format)
             else:
                 file_title += '.{}'.format(note_format)
-            note_file = open(file_title, 'w')
             break
 
-    note_file.write(title.encode('utf-8'))
-    note_file.write('\n' + len(title) * '=' + '\n\n')
-    note_file.write(':date: {}\n:author: {}\n:tags: '.format(date,
-                    config['author']))
-    note_file.close()
-    if config['editor']:
-        subprocess.call(config['editor'].split() + [file_title])
-    else:
-        print('Created file {}'.format(file_title))
+    return file_title
 
 
 def edit_note(args, config):
     """Edit the note referred to by ``args.identifier``.
-    
+
     The identifier can either be a note title, a date, a filename or a note
     number.
 
@@ -111,7 +129,7 @@ def edit_note(args, config):
 
 def read_note_info(note_file):
     """Read the note contained in note_file and return the date and the title.
-    
+
     """
     title = note_file.readline().strip()
     line = note_file.readline()
@@ -144,7 +162,7 @@ def list_notes(args, config):
 
 def read_config(fname='~/.researchnoterc'):
     """Read configuration file.
-    
+
     The default location for the configuration file is ``~/.researchnoterc``.
     This file is in INI format and contains information about the author, the
     location of the notebook and the editor used to create and edit notes.
