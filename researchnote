@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import researchnote
+
+if __name__ == '__main__':
+    researchnote.run()
