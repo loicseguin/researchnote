@@ -43,7 +43,7 @@ def create_note(args):
 
     """
     title = unicode(' '.join(args.title), 'utf-8')
-    date = time.strftime('%Y-%m-%d', time.localtime())
+    date = time.strftime('%Y/%m/%d', time.localtime())
     author, editor, notes_dir = read_config(args.config)
     file_title = unidecode.unidecode(
             title).replace(',', '').replace('.', '').replace(' ', '_')
