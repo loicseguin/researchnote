@@ -171,25 +171,28 @@ def read_config(fname='~/.researchnoterc'):
 
 def run(argv=sys.argv[1:]):
     """Parse the command line arguments and run the appropriate command."""
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('-c', '--config', default='~/.researchnoterc',
+            help=_('configuration file to use'))
+
     clparser = argparse.ArgumentParser(description=_('Manage a research ' +
-            'notebook using reStructuredText files.'))
+            'notebook using reStructuredText files.'), parents=[parent_parser])
     clparser.add_argument('-v', '--version', action='version',
             version='%(prog)s ' + __version__)
-    clparser.add_argument('-c', '--config', default='~/.researchnoterc',
-            help=_('configuration file to use'))
 
     subparsers = clparser.add_subparsers()
     createparser = subparsers.add_parser(_('create'),
-            help=_('create a new note'))
+            help=_('create a new note'), parents=[parent_parser])
     createparser.add_argument('title', nargs='+')
     createparser.set_defaults(func=create_note)
 
     editparser = subparsers.add_parser(_('edit'),
-            help=_('edit an existing note'))
+            help=_('edit an existing note'), parents=[parent_parser])
     editparser.add_argument('identifier', nargs='+')
     editparser.set_defaults(func=edit_note)
 
-    listparser = subparsers.add_parser(_('list'), help=_('list all notes'))
+    listparser = subparsers.add_parser(_('list'), help=_('list all notes'),
+            parents=[parent_parser])
     listparser.add_argument('-r', '--reverse', action='store_true',
             help=_('show newest notes first'))
     listparser.set_defaults(func=list_notes)
