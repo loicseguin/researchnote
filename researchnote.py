@@ -77,10 +77,34 @@ def create_note(args):
 def edit_note(args):
     """Edit the note referred to by ``args.identifier``.
     
-    The identifier can either be a note title, a date or a filename.
+    The identifier can either be a note title, a date, a filename or a note
+    number.
 
     """
-    pass
+    author, editor, notes_dir = read_config(args.config)
+    identifier = ' '.join(args.identifier)
+    fname = ''
+    try:
+        numid = int(identifier)
+        fname, numid = get_note_list(notes_dir)[numid - 1]
+    except ValueError:
+        fnames_numids = get_note_list(notes_dir)
+        notes = [(fname,) + read_note_info(open(fname)) for
+                 fname, numid in fnames_numids]
+        for fname, date, title in notes:
+            if date == identifier or identifier in title:
+                break
+
+    if not fname:
+        print("Can't find note matching identifier {}".format(identifier),
+                file=sys.stderr)
+        return
+
+    if editor:
+        subprocess.call(editor.split() + [fname])
+    else:
+        print("EDITOR not defined, can't open file for editing.",
+              file=sys.stderr)
 
 
 def read_note_info(note_file):
