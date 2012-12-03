@@ -1,0 +1,5 @@
+[ResearchNote]
+author = Anauthor Name
+notes_dir = ~/some/folder
+editor = vim + +star!
+
