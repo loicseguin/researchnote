@@ -122,10 +122,9 @@ def read_config(fname='~/.researchnoterc'):
     editor = os.environ.get('EDITOR', '')
     notes_dir = os.getcwd()
     try:
-        config_file = open(os.path.expanduser(fname))
         config = ConfigParser.ConfigParser({'author': author, 'editor': editor,
             'notes_dir': notes_dir})
-        config.read(fname)
+        config.read(os.path.expanduser(fname))
         author = config.get('ResearchNote', 'author')
         editor = config.get('ResearchNote', 'editor')
         notes_dir = os.path.expanduser(config.get('ResearchNote', 'notes_dir'))
