@@ -95,19 +95,26 @@ def read_note_info(note_file):
     return date, title
 
 
-def list_notes(args):
-    """List all notes in chronological order."""
-    author, editor, notes_dir = read_config(args.config)
+def get_note_list(notes_dir):
+    """Open notes_dir and find all notes. Return a list of notes paths."""
     listdir = os.listdir(notes_dir)
     notes = []
     for fname in listdir:
         if re.compile(NOTE_FILE_RE).match(fname):
-            notes.append(read_note_info(open(os.path.join(notes_dir, fname))))
+            notes.append(os.path.join(notes_dir, fname))
     notes = sorted(notes)
+    return zip(notes, range(1, len(notes) + 1))
+
+
+def list_notes(args):
+    """List all notes in chronological order."""
+    author, editor, notes_dir = read_config(args.config)
+    notes = get_note_list(notes_dir)
+    notes = [read_note_info(open(fname)) + (numid,) for fname, numid in notes]
     if args.reverse:
         notes.reverse()
-    for date, title in notes:
-        print('{}  {}'.format(date, title))
+    for date, title, numid in notes:
+        print('{:3d}   {}   {}'.format(numid, date, title))
 
 
 def read_config(fname='~/.researchnoterc'):
