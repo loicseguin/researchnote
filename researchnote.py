@@ -104,11 +104,12 @@ def edit_note(args, config):
     identifier = ' '.join(args.identifier)
     fname = ''
     notes_dir = config['notes_dir']
+    note_format = config['note_format']
     try:
         numid = int(identifier)
-        fname, numid = get_note_list(notes_dir)[numid - 1]
+        fname, numid = get_note_list(notes_dir, note_format)[numid - 1]
     except ValueError:
-        fnames_numids = get_note_list(notes_dir, config['note_format'])
+        fnames_numids = get_note_list(notes_dir, note_format)
         notes = [(fname,) + read_note_info(open(fname)) for
                  fname, numid in fnames_numids]
         for fname, date, title in notes:
