@@ -64,8 +64,20 @@ def create_note(args, config):
     note_file.close()
     if config['editor']:
         subprocess.call(config['editor'].split() + [file_title])
+        post_edit(file_title)
     else:
         print('Created file {}'.format(file_title))
+
+
+def post_edit(fname):
+    """Copy all figures referenced in fname into the notes_dir/images folder
+    and adjust figure references accordingly.
+    
+    """
+    f = open(fname)
+    for line in f:
+        pass
+
 
 
 def get_new_note_filename(title, date, notes_dir, note_format):
