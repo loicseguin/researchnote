@@ -43,7 +43,7 @@ def create_note(args, config):
         A note name
         ===========
 
-        :date: YYYY/MM/DD
+        :date: YYYY-MM-DD
         :author: Author Name
         :tags:
 
@@ -52,7 +52,7 @@ def create_note(args, config):
 
     """
     title = unicode(' '.join(args.title), 'utf-8')
-    date = time.strftime('%Y/%m/%d', time.localtime())
+    date = time.strftime('%Y-%m-%d', time.localtime())
     notes_dir = config['notes_dir']
     note_format = config['note_format']
     file_title = get_new_note_filename(title, date, notes_dir, note_format)
@@ -77,7 +77,6 @@ def post_edit(fname):
     f = open(fname)
     for line in f:
         pass
-
 
 
 def get_new_note_filename(title, date, notes_dir, note_format):
