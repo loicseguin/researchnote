@@ -195,7 +195,8 @@ def read_config(fname='~/.researchnoterc'):
         configs['note_format'] = config.get('ResearchNote', 'note_format')
     except ConfigParser.NoSectionError:
         # Configuration file is badly formatted
-        pass
+        print("There was an error parsing the configuration "
+              "file: {}".format(fname))
     return configs
 
 
