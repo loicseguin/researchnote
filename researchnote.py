@@ -228,7 +228,10 @@ def run(argv=sys.argv[1:]):
     listparser.set_defaults(func=list_notes)
 
     args = clparser.parse_args(argv)
-    args.func(args, read_config(args.config))
+    try:
+        args.func(args, read_config(args.config))
+    except AttributeError as e:
+        clparser.print_help()
 
 
 if __name__ == '__main__':
