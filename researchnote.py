@@ -51,13 +51,13 @@ def create_note(args, config):
     edit the file.
 
     """
-    title = unicode(' '.join(args.title), 'utf-8')
+    title = unicode(' '.join(args.title))
     date = time.strftime('%Y-%m-%d', time.localtime())
     notes_dir = config['notes_dir']
     note_format = config['note_format']
     file_title = get_new_note_filename(title, date, notes_dir, note_format)
     note_file = open(file_title, 'w')
-    note_file.write(title.encode('utf-8'))
+    note_file.write(title)
     note_file.write('\n' + len(title) * '=' + '\n\n')
     note_file.write(':date: {}\n:author: {}\n:tags: '.format(date,
                     config['author']))
@@ -82,8 +82,7 @@ def post_edit(fname):
 def get_new_note_filename(title, date, notes_dir, note_format):
     """Return a file name for a new note with specified title and date."""
     file_title = unidecode.unidecode(title)
-    file_title = file_title.translate(string.maketrans('', ''),
-            string.punctuation)
+    file_title = re.sub(r'[^\w\s]', '', file_title)
     file_title = file_title.replace(' ', '_')
     file_title = os.path.join(notes_dir,
             date.replace('/', '-') + '_' + file_title)
