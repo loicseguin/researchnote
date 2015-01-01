@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 
-import StringIO
+import io
 import researchnote
 from nose.tools import assert_equal
 
@@ -70,13 +70,13 @@ long names that correspond to this short name.
 """
 
     def test_read_valid_note_info(self):
-        note_file = StringIO.StringIO(self.note1)
+        note_file = io.StringIO(self.note1)
         date, title = researchnote.read_note_info(note_file)
         assert_equal(date, '2012/10/30')
         assert_equal(title, 'Fitting SDSS spectra')
 
     def test_read_invalid_note_info(self):
-        note_file = StringIO.StringIO(self.note3)
+        note_file = io.StringIO(self.note3)
         date, title = researchnote.read_note_info(note_file)
         assert_equal(date, '')
         assert_equal(title, 'Problem with SDSS J1406-0119')

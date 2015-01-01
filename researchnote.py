@@ -10,10 +10,10 @@ License: BSD license
 
 """
 
-from __future__  import print_function
+
 
 import argparse
-import ConfigParser
+import configparser
 import re
 import os
 import string
@@ -51,7 +51,7 @@ def create_note(args, config):
     edit the file.
 
     """
-    title = unicode(' '.join(args.title))
+    title = str(' '.join(args.title))
     date = time.strftime('%Y-%m-%d', time.localtime())
     notes_dir = config['notes_dir']
     note_format = config['note_format']
@@ -158,7 +158,7 @@ def get_note_list(notes_dir, note_format):
         if re.compile(NOTE_FILE_RE + note_format).match(fname):
             notes.append(os.path.join(notes_dir, fname))
     notes = sorted(notes)
-    return zip(notes, range(1, len(notes) + 1))
+    return list(zip(notes, list(range(1, len(notes) + 1))))
 
 
 def list_notes(args, config):
@@ -186,13 +186,13 @@ def read_config(fname='~/.researchnoterc'):
             'note_format': 'rst'
             }
     try:
-        config = ConfigParser.ConfigParser(configs)
+        config = configparser.ConfigParser(configs)
         config.read(os.path.expanduser(fname))
         configs['author'] = config.get('ResearchNote', 'author')
         configs['editor'] = config.get('ResearchNote', 'editor')
         configs['notes_dir'] = os.path.expanduser(config.get('ResearchNote', 'notes_dir'))
         configs['note_format'] = config.get('ResearchNote', 'note_format')
-    except ConfigParser.NoSectionError:
+    except configparser.NoSectionError:
         # Configuration file is badly formatted
         print("There was an error parsing the configuration "
               "file: {}".format(fname))
